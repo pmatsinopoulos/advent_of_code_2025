@@ -25,21 +25,15 @@ fn validate(input: &str) -> ValidationResult {
         return ValidationResult::Valid;
     }
 
-    let i = 0;
-    let mut j = i + 1;
-    loop {
-        let left = &input[i..j];
-        let right = &input[j..];
-        if right.len() < left.len() {
-            break;
-        }
-        if left == &right[0..left.len()] && left.len() == right.len() {
-            return ValidationResult::Invalid {
-                number: left.parse().unwrap(),
-            };
-        }
-        j += 1;
+    let split_index = input.len() / 2;
+    let (left, right) = input.split_at(split_index);
+
+    if right == left {
+        return ValidationResult::Invalid {
+            number: left.parse().unwrap(),
+        };
     }
+
     ValidationResult::Valid
 }
 
