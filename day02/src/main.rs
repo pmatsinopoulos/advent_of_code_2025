@@ -1,8 +1,13 @@
+use clap::Parser;
 use std::cmp::PartialEq;
+use std::fs;
+use std::io::{BufRead, BufReader};
 use std::ops::Range;
 
-fn main() {
-    println!("Hello, world!");
+#[derive(Parser, Debug)]
+struct Args {
+    #[arg(short, long, default_value = "input.txt")]
+    input_file: String,
 }
 
 // I need to create a function that
@@ -55,6 +60,40 @@ fn ranges_from_string(input: &str) -> Vec<Range<u64>> {
         .iter()
         .map(|x| range_from_string(x))
         .collect()
+}
+
+fn add_invalid_ranges(ranges: &Vec<Range<u64>>) -> u64 {
+    let mut result = 0;
+    for range in ranges {
+        let r_cloned = range.clone();
+        for i in r_cloned {
+            let i_str = format!("{}", i);
+            let is_invalid = validate(&i_str);
+            match is_invalid {
+                ValidationResult::Invalid { number } => {
+                    result += i;
+                }
+                ValidationResult::Valid => {}
+            }
+        }
+    }
+    result
+}
+
+fn read_line(path: &str) -> String {
+    fs::read_to_string(path).unwrap().trim_end().to_string()
+}
+
+fn main() {
+    let args = Args::parse();
+    let input_file = args.input_file;
+    let line = read_line(&input_file);
+    if line == "" {
+        return;
+    }
+    let ranges = ranges_from_string(&line);
+    let result = add_invalid_ranges(&ranges);
+    println!("result = {}", result);
 }
 
 // ----- validate() -----------------------------------------------------------------------
@@ -162,4 +201,33 @@ fn test_ranges_from_string_case_1() {
             }
         ]
     )
+}
+
+// --- add_invalid_ranges ---
+
+#[test]
+fn add_invalid_ranges_case_1() {
+    let ranges = vec![Range { start: 11, end: 23 }];
+    let result = add_invalid_ranges(&ranges);
+    assert_eq!(result, 33);
+}
+
+#[test]
+fn add_invalid_ranges_case_2() {
+    let ranges = vec![Range {
+        start: 95,
+        end: 116,
+    }];
+    let result = add_invalid_ranges(&ranges);
+    assert_eq!(result, 99);
+}
+
+#[test]
+fn add_invalid_ranges_case_3() {
+    let ranges = vec![Range {
+        start: 998,
+        end: 1013,
+    }];
+    let result = add_invalid_ranges(&ranges);
+    assert_eq!(result, 1010);
 }
