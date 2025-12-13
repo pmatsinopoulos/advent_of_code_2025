@@ -1,8 +1,7 @@
 use clap::Parser;
 use std::cmp::PartialEq;
 use std::fs;
-use std::io::{BufRead, BufReader};
-use std::ops::Range;
+use std::ops::RangeInclusive;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -44,17 +43,14 @@ fn validate(input: &str) -> ValidationResult {
     ValidationResult::Valid
 }
 
-fn range_from_string(input: &str) -> Range<u64> {
+fn range_from_string(input: &str) -> RangeInclusive<u64> {
     let (left, right) = input.split_once("-").unwrap();
     let start: u64 = left.parse().unwrap();
     let end: u64 = right.parse().unwrap();
-    Range {
-        start,
-        end: end + 1,
-    }
+    start..=end
 }
 
-fn ranges_from_string(input: &str) -> Vec<Range<u64>> {
+fn ranges_from_string(input: &str) -> Vec<RangeInclusive<u64>> {
     let ranges_strings: Vec<&str> = input.split(',').collect();
     ranges_strings
         .iter()
@@ -62,7 +58,7 @@ fn ranges_from_string(input: &str) -> Vec<Range<u64>> {
         .collect()
 }
 
-fn add_invalid_ranges(ranges: &Vec<Range<u64>>) -> u64 {
+fn add_invalid_ranges(ranges: &Vec<RangeInclusive<u64>>) -> u64 {
     let mut result = 0;
     for range in ranges {
         let r_cloned = range.clone();
@@ -70,7 +66,7 @@ fn add_invalid_ranges(ranges: &Vec<Range<u64>>) -> u64 {
             let i_str = format!("{}", i);
             let is_invalid = validate(&i_str);
             match is_invalid {
-                ValidationResult::Invalid { number } => {
+                ValidationResult::Invalid { .. } => {
                     result += i;
                 }
                 ValidationResult::Valid => {}
@@ -174,7 +170,7 @@ fn test_case_10() {
 fn test_range_from_string_case_1() {
     let input = "11-25";
     let range_result = range_from_string(input);
-    assert_eq!(range_result, Range { start: 11, end: 26 });
+    assert_eq!(range_result, 11..=25);
 }
 
 // --- ranges_from_string ---------------------
@@ -185,21 +181,7 @@ fn test_ranges_from_string_case_1() {
     let ranges = ranges_from_string(input);
     assert_eq!(
         ranges,
-        vec![
-            Range { start: 11, end: 23 },
-            Range {
-                start: 95,
-                end: 116
-            },
-            Range {
-                start: 998,
-                end: 1013
-            },
-            Range {
-                start: 1188511880,
-                end: 1188511891,
-            }
-        ]
+        vec![11..=22, 95..=115, 998..=1012, 1188511880..=1188511890,]
     )
 }
 
@@ -207,27 +189,21 @@ fn test_ranges_from_string_case_1() {
 
 #[test]
 fn add_invalid_ranges_case_1() {
-    let ranges = vec![Range { start: 11, end: 23 }];
+    let ranges = vec![11..=22];
     let result = add_invalid_ranges(&ranges);
     assert_eq!(result, 33);
 }
 
 #[test]
 fn add_invalid_ranges_case_2() {
-    let ranges = vec![Range {
-        start: 95,
-        end: 116,
-    }];
+    let ranges = vec![99..=115];
     let result = add_invalid_ranges(&ranges);
     assert_eq!(result, 99);
 }
 
 #[test]
 fn add_invalid_ranges_case_3() {
-    let ranges = vec![Range {
-        start: 998,
-        end: 1013,
-    }];
+    let ranges = vec![998..=1012];
     let result = add_invalid_ranges(&ranges);
     assert_eq!(result, 1010);
 }
