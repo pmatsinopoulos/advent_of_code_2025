@@ -1,6 +1,8 @@
 use clap::Parser;
 use std::cmp::PartialEq;
+use std::error::Error;
 use std::fs;
+use std::io;
 use std::ops::RangeInclusive;
 
 #[derive(Parser, Debug)]
@@ -59,20 +61,22 @@ fn add_invalid_ranges(ranges: &[RangeInclusive<u64>]) -> u64 {
         .sum()
 }
 
-fn read_line(path: &str) -> String {
-    fs::read_to_string(path).unwrap().trim_end().to_string()
+fn read_line(path: &str) -> io::Result<String> {
+    let content = fs::read_to_string(path)?;
+    Ok(content.trim_end().to_string())
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
     let input_file = args.input_file;
-    let line = read_line(&input_file);
-    if line == "" {
-        return;
+    let line = read_line(&input_file)?;
+    if line.is_empty() {
+        return Ok(());
     }
     let ranges = ranges_from_string(&line);
     let result = add_invalid_ranges(&ranges);
     println!("result = {}", result);
+    Ok(())
 }
 
 // ----- validate() -----------------------------------------------------------------------
