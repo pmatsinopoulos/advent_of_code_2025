@@ -48,22 +48,15 @@ fn ranges_from_string(input: &str) -> Vec<RangeInclusive<u64>> {
     input.split(',').map(range_from_string).collect()
 }
 
-fn add_invalid_ranges(ranges: &Vec<RangeInclusive<u64>>) -> u64 {
-    let mut result = 0;
-    for range in ranges {
-        let r_cloned = range.clone();
-        for i in r_cloned {
-            let i_str = format!("{}", i);
-            let is_invalid = validate(&i_str);
-            match is_invalid {
-                ValidationResult::Invalid { .. } => {
-                    result += i;
-                }
-                ValidationResult::Valid => {}
-            }
-        }
-    }
-    result
+fn add_invalid_ranges(ranges: &[RangeInclusive<u64>]) -> u64 {
+    ranges
+        .iter()
+        .flat_map(|range| range.clone())
+        .map(|value| match validate(&value.to_string()) {
+            ValidationResult::Invalid { .. } => value,
+            ValidationResult::Valid => 0,
+        })
+        .sum()
 }
 
 fn read_line(path: &str) -> String {
