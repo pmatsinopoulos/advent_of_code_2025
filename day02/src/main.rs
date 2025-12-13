@@ -37,22 +37,16 @@ fn validate(input: &str) -> ValidationResult {
     for i in 1..=max {
         let remainder = length % i;
         if remainder == 0 {
-            let parts: Vec<&str> = input
-                .as_bytes()
-                .chunks(i)
-                .map(|chunk| std::str::from_utf8(chunk).unwrap())
-                .collect();
-            let mut all_equal: bool = true;
-            for j in 0..parts.len() - 1 {
-                if parts[j] != parts[j + 1] {
-                    all_equal = false;
-                    break;
+            let mut chunks = input.as_bytes().chunks_exact(i);
+            let first = chunks.next().unwrap();
+
+            if chunks.all(|chunk| chunk == first) {
+                if let Some(number) = std::str::from_utf8(first)
+                    .ok()
+                    .and_then(|s| s.parse::<u64>().ok())
+                {
+                    return ValidationResult::Invalid { number };
                 }
-            }
-            if all_equal {
-                return ValidationResult::Invalid {
-                    number: parts[0].parse().unwrap(),
-                };
             }
         }
     }
