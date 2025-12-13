@@ -23,17 +23,32 @@ enum ValidationResult {
 }
 
 fn validate(input: &str) -> ValidationResult {
-    if input.len() <= 1 {
+    let length = input.len();
+    if length <= 1 {
         return ValidationResult::Valid;
     }
 
-    let split_index = input.len() / 2;
-    let (left, right) = input.split_at(split_index);
+    let max = length / 2;
+    // for each number from 1 to max, including,
+    // if the number divides the length without remainder
+    // then we do the division and we compare all the parts
+    // of the input. If they match, then invalid range.
+    // The first part returned as number.
+    for i in 1..=max {
+        let remainder = length % i;
+        if remainder == 0 {
+            let mut chunks = input.as_bytes().chunks_exact(i);
+            let first = chunks.next().unwrap();
 
-    if right == left {
-        return ValidationResult::Invalid {
-            number: left.parse().unwrap(),
-        };
+            if chunks.all(|chunk| chunk == first) {
+                if let Some(number) = std::str::from_utf8(first)
+                    .ok()
+                    .and_then(|s| s.parse::<u64>().ok())
+                {
+                    return ValidationResult::Invalid { number };
+                }
+            }
+        }
     }
 
     ValidationResult::Valid
@@ -185,12 +200,26 @@ fn add_invalid_ranges_case_1() {
 fn add_invalid_ranges_case_2() {
     let ranges = vec![99..=115];
     let result = add_invalid_ranges(&ranges);
-    assert_eq!(result, 99);
+    assert_eq!(result, 210);
 }
 
 #[test]
 fn add_invalid_ranges_case_3() {
     let ranges = vec![998..=1012];
     let result = add_invalid_ranges(&ranges);
-    assert_eq!(result, 1010);
+    assert_eq!(result, 2009);
+}
+
+#[test]
+fn add_invalid_ranges_case_4() {
+    let ranges = vec![565653..=565659];
+    let result = add_invalid_ranges(&ranges);
+    assert_eq!(result, 565656);
+}
+
+#[test]
+fn add_invalid_ranges_case_5() {
+    let ranges = vec![824824821..=824824827];
+    let result = add_invalid_ranges(&ranges);
+    assert_eq!(result, 824824824);
 }
