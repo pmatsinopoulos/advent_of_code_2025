@@ -45,11 +45,7 @@ fn range_from_string(input: &str) -> RangeInclusive<u64> {
 }
 
 fn ranges_from_string(input: &str) -> Vec<RangeInclusive<u64>> {
-    let ranges_strings: Vec<&str> = input.split(',').collect();
-    ranges_strings
-        .iter()
-        .map(|x| range_from_string(x))
-        .collect()
+    input.split(',').map(range_from_string).collect()
 }
 
 fn add_invalid_ranges(ranges: &Vec<RangeInclusive<u64>>) -> u64 {
