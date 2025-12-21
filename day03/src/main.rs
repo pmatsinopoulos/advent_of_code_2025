@@ -20,14 +20,13 @@ fn find_maximum_digit_and_position(input: &str) -> Option<(u8, usize)> {
         return Some((max, position));
     }
 
-    let mut i = position + 1;
-    for byte in input[position + 1..input.len()].bytes() {
+    let initial_position = position + 1;
+    for (i, byte) in input[initial_position..input.len()].bytes().enumerate() {
         let num = byte - b'0';
         if num > max {
             max = num;
-            position = i;
+            position = initial_position + i;
         }
-        i += 1;
     }
     // at the end of the iteration we have the maximum number and its position
     Some((max, position))
