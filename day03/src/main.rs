@@ -10,30 +10,40 @@ struct Args {
 }
 
 fn max_digits_into_integer(input: &str, num_of_digits: usize) -> u128 {
-    assert!(num_of_digits >= 1);
-    assert!(input.len() >= num_of_digits);
+    assert!(
+        num_of_digits > 0,
+        "requested digits should be greater than 1"
+    );
+    assert!(
+        input.len() >= num_of_digits,
+        "input length should be greater than the number of digits"
+    );
 
-    let mut stack: Vec<u8> = Vec::with_capacity(input.len());
+    let total = input.len();
+    let mut stack: Vec<u8> = Vec::with_capacity(num_of_digits);
 
     for (idx, byte) in input.bytes().enumerate() {
         let num = byte - b'0';
-        while stack.len() > 0
-            && num > stack[stack.len() - 1]
-            && stack.len() - 1 + (input.len() - idx) >= num_of_digits
-        {
-            stack.pop();
+        let remaining = total - idx;
+
+        // pop out from the stack as many items as needed.
+        while let Some(&top) = stack.last() {
+            if num > top && stack.len() + remaining > num_of_digits {
+                stack.pop();
+            } else {
+                break;
+            }
         }
+
+        // should I push the current item to the stack
         if stack.len() < num_of_digits {
             stack.push(num);
         }
     }
 
-    let mut value: u128 = 0;
-    for &digit in &stack {
-        value = value * 10 + digit as u128;
-    }
-
-    value
+    stack
+        .into_iter()
+        .fold(0_u128, |acc, digit| acc * 10 + digit as u128)
 }
 
 fn read_lines(path: &str) -> Result<Vec<String>> {
