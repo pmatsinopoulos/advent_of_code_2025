@@ -1,5 +1,4 @@
 use clap::Parser;
-use std::cmp::Ordering;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::{BufRead, Result};
@@ -10,33 +9,31 @@ struct Args {
     input_file: String,
 }
 
-fn find_maximum_digit_and_position(input: &str) -> Option<(u8, usize)> {
-    input
-        .bytes()
-        .enumerate()
-        .filter(|&(_, byte)| byte.is_ascii_digit())
-        .map(|(idx, byte)| (byte - b'0', idx))
-        .reduce(|best, candidate| match best.0.cmp(&candidate.0) {
-            Ordering::Less => candidate,
-            Ordering::Equal | Ordering::Greater => best,
-        })
-}
+fn max_digits_into_integer(input: &str, num_of_digits: usize) -> u128 {
+    assert!(num_of_digits >= 1);
+    assert!(input.len() >= num_of_digits);
 
-fn turn_two_max_digits_into_integer(input: &str) -> u8 {
-    assert!(input.len() >= 2);
+    let mut stack: Vec<u8> = Vec::with_capacity(input.len());
 
-    let (max1, position) = find_maximum_digit_and_position(input).unwrap();
-
-    let found = find_maximum_digit_and_position(&input[position + 1..]);
-    if found.is_none() {
-        // we are missing the second maximum. This means that the first maximum
-        // is at the end of the input string. Hence, we have to find the maximum
-        // before that
-        let (max2, _) = find_maximum_digit_and_position(&input[0..position]).unwrap();
-        max2 * 10 + max1
-    } else {
-        max1 * 10 + found.unwrap().0
+    for (idx, byte) in input.bytes().enumerate() {
+        let num = byte - b'0';
+        while stack.len() > 0
+            && num > stack[stack.len() - 1]
+            && stack.len() - 1 + (input.len() - idx) >= num_of_digits
+        {
+            stack.pop();
+        }
+        if stack.len() < num_of_digits {
+            stack.push(num);
+        }
     }
+
+    let mut value: u128 = 0;
+    for &digit in &stack {
+        value = value * 10 + digit as u128;
+    }
+
+    value
 }
 
 fn read_lines(path: &str) -> Result<Vec<String>> {
@@ -47,10 +44,10 @@ fn read_lines(path: &str) -> Result<Vec<String>> {
 
 fn main() -> Result<()> {
     let args: Args = Args::parse();
-    let sum: u64 = read_lines(&args.input_file)?
+    let sum: u128 = read_lines(&args.input_file)?
         .into_iter()
         .filter(|l| !l.trim().is_empty())
-        .map(|line| turn_two_max_digits_into_integer(&line) as u64)
+        .map(|line| max_digits_into_integer(&line, 12) as u128)
         .sum();
 
     println!("sum = {}", sum);
@@ -58,100 +55,38 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-#[test]
-fn test_find_maximum_digit_and_position_case_1() {
-    let input = "1";
-    let result = find_maximum_digit_and_position(input);
-    assert_eq!(result, Some((1, 0)));
-}
+// --- Tests ---
+
+// max_digits_into_integer()
 
 #[test]
-fn test_find_maximum_digit_and_position_case_2() {
-    let input = "12";
-    let result = find_maximum_digit_and_position(input);
-    assert_eq!(result, Some((2, 1)));
-}
-
-#[test]
-fn test_find_maximum_digit_and_position_case_3() {
-    let input = "132";
-    let result = find_maximum_digit_and_position(input);
-    assert_eq!(result, Some((3, 1)));
-}
-
-#[test]
-fn test_find_maximum_digit_and_position_case_4() {
-    let input = "1324";
-    let result = find_maximum_digit_and_position(input);
-    assert_eq!(result, Some((4, 3)));
-}
-
-#[test]
-fn test_turn_two_max_digits_into_integer_case_1() {
-    let input = "18";
-    let result = turn_two_max_digits_into_integer(input);
-    assert_eq!(result, 18);
-}
-
-#[test]
-fn test_turn_two_max_digits_into_integer_case_2() {
-    let input = "832";
-    let result = turn_two_max_digits_into_integer(input);
-    assert_eq!(result, 83);
-}
-
-#[test]
-fn test_turn_two_max_digits_into_integer_case_3() {
-    let input = "987654321111111";
-    let result = turn_two_max_digits_into_integer(input);
-    assert_eq!(result, 98);
-}
-
-#[test]
-fn test_turn_two_max_digits_into_integer_case_4() {
-    let input = "811111111111119";
-    let result = turn_two_max_digits_into_integer(input);
-    assert_eq!(result, 89);
-}
-
-#[test]
-fn test_turn_two_max_digits_into_integer_case_5() {
-    let input = "234234234234278";
-    let result = turn_two_max_digits_into_integer(input);
-    assert_eq!(result, 78);
-}
-
-#[test]
-fn test_turn_two_max_digits_into_integer_case_6() {
-    let input = "11";
-    let result = turn_two_max_digits_into_integer(input);
-    assert_eq!(result, 11);
-}
-
-#[test]
-fn test_turn_two_max_digits_into_integer_case_7() {
-    let input = "12";
-    let result = turn_two_max_digits_into_integer(input);
-    assert_eq!(result, 12);
-}
-
-#[test]
-fn test_turn_two_max_digits_into_integer_case_8() {
-    let input = "21";
-    let result = turn_two_max_digits_into_integer(input);
-    assert_eq!(result, 21);
-}
-
-#[test]
-fn test_turn_two_max_digits_into_integer_case_9() {
-    let input = "2121212121";
-    let result = turn_two_max_digits_into_integer(input);
-    assert_eq!(result, 22);
-}
-
-#[test]
-fn test_turn_two_max_digits_into_integer_case_10() {
+fn test_max_digits_into_integer_case_1() {
     let input = "818181911112111";
-    let result = turn_two_max_digits_into_integer(input);
-    assert_eq!(result, 92);
+    let num_of_digits = 12;
+    let result = max_digits_into_integer(input, num_of_digits);
+    assert_eq!(result, 888911112111);
+}
+
+#[test]
+fn test_max_digits_into_integer_case_2() {
+    let input = "987654321111111";
+    let num_of_digits = 12;
+    let result = max_digits_into_integer(input, num_of_digits);
+    assert_eq!(result, 987654321111);
+}
+
+#[test]
+fn test_max_digits_into_integer_case_3() {
+    let input = "811111111111119";
+    let num_of_digits = 12;
+    let result = max_digits_into_integer(input, num_of_digits);
+    assert_eq!(result, 811111111119);
+}
+
+#[test]
+fn test_max_digits_into_integer_case_4() {
+    let input = "234234234234278";
+    let num_of_digits = 12;
+    let result = max_digits_into_integer(input, num_of_digits);
+    assert_eq!(result, 434234234278);
 }
