@@ -45,19 +45,17 @@ fn read_lines(path: &str) -> Result<Vec<String>> {
     reader.lines().collect()
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args: Args = Args::parse();
-    let lines = read_lines(&args.input_file).unwrap();
-    let mut sum = 0_u64;
-    for line in lines {
-        if line == "" {
-            continue;
-        }
-
-        sum = sum + turn_two_max_digits_into_integer(&line) as u64;
-    }
+    let sum: u64 = read_lines(&args.input_file)?
+        .into_iter()
+        .filter(|l| !l.trim().is_empty())
+        .map(|line| turn_two_max_digits_into_integer(&line) as u64)
+        .sum();
 
     println!("sum = {}", sum);
+
+    Ok(())
 }
 
 #[test]
