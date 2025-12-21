@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::cmp::Ordering;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::{BufRead, Result};
@@ -10,26 +11,15 @@ struct Args {
 }
 
 fn find_maximum_digit_and_position(input: &str) -> Option<(u8, usize)> {
-    if input.len() == 0 {
-        return None;
-    }
-    let mut max: u8 = (&input[0..1]).parse().unwrap();
-    let mut position = 0_usize;
-
-    if input.len() == 1 {
-        return Some((max, position));
-    }
-
-    let initial_position = position + 1;
-    for (i, byte) in input[initial_position..input.len()].bytes().enumerate() {
-        let num = byte - b'0';
-        if num > max {
-            max = num;
-            position = initial_position + i;
-        }
-    }
-    // at the end of the iteration we have the maximum number and its position
-    Some((max, position))
+    input
+        .bytes()
+        .enumerate()
+        .filter(|&(_, byte)| byte.is_ascii_digit())
+        .map(|(idx, byte)| (byte - b'0', idx))
+        .reduce(|best, candidate| match best.0.cmp(&candidate.0) {
+            Ordering::Less => candidate,
+            Ordering::Equal | Ordering::Greater => best,
+        })
 }
 
 fn turn_two_max_digits_into_integer(input: &str) -> u8 {
