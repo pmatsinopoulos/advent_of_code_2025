@@ -26,9 +26,15 @@ fn read_lines(path: &str) -> Result<Grid> {
 
 fn main() -> Result<()> {
     let args = Args::parse();
-    let grid = read_lines(&args.input_file)?;
-    let result = number_of_rolls_that_can_be_accessed(&grid);
-    println!("result = {}", result);
+    let mut grid = read_lines(&args.input_file)?;
+
+    let sum: usize = std::iter::from_fn(|| {
+        let result = number_of_rolls_that_can_be_accessed_and_removed(&mut grid);
+        (result > 0).then_some(result)
+    })
+    .sum();
+
+    println!("result = {sum}");
     Ok(())
 }
 
@@ -48,6 +54,33 @@ fn number_of_rolls_that_can_be_accessed(grid: &Grid) -> usize {
                 result += 1;
             }
         }
+    }
+    result
+}
+
+fn number_of_rolls_that_can_be_accessed_and_removed(grid: &mut Vec<String>) -> usize {
+    let mut result = 0;
+
+    let number_of_rows = grid.len();
+    assert!(number_of_rows >= 1);
+
+    let number_of_columns = grid[0].len();
+    assert!(number_of_columns >= 1);
+    let mut positions_to_remove: Vec<GridPosition> = vec![];
+    for i in 0..number_of_rows {
+        for j in 0..number_of_columns {
+            let current_position = GridPosition { column: j, row: i };
+            if can_be_accessed(grid, &current_position) {
+                positions_to_remove.push(current_position);
+                result += 1;
+            }
+        }
+    }
+    for position_to_remove in positions_to_remove {
+        grid[position_to_remove.row].replace_range(
+            position_to_remove.column..position_to_remove.column + 1,
+            ".",
+        )
     }
     result
 }
@@ -87,6 +120,10 @@ fn number_of_adjacent_rolls_of_paper(grid: &Grid, current_position: &GridPositio
         i += 1;
     }
     count
+}
+
+fn number_of_rolls_that_can_be_removed(grid: &Grid) -> usize {
+    0
 }
 
 #[cfg(test)]
@@ -208,4 +245,38 @@ fn test_number_of_adjacent_rolls_of_paper_case_1() {
 
     let number_of_rolls = number_of_rolls_that_can_be_accessed(&grid);
     assert_eq!(number_of_rolls, 13);
+}
+
+#[test]
+fn test_case_2() {
+    let mut grid: Grid = vec![
+        "..@@.@@@@.".to_string(),
+        "@@@.@.@.@@".to_string(),
+        "@@@@@.@.@@".to_string(),
+        "@.@@@@..@.".to_string(),
+        "@@.@@@@.@@".to_string(),
+        ".@@@@@@@.@".to_string(),
+        ".@.@.@.@@@".to_string(),
+        "@.@@@.@@@@".to_string(),
+        ".@@@@@@@@.".to_string(),
+        "@.@.@@@.@.".to_string(),
+    ];
+
+    let result = number_of_rolls_that_can_be_accessed_and_removed(&mut grid);
+    assert_eq!(result, 13);
+    assert_eq!(
+        grid,
+        vec![
+            ".......@..".to_string(),
+            ".@@.@.@.@@".to_string(),
+            "@@@@@...@@".to_string(),
+            "@.@@@@..@.".to_string(),
+            ".@.@@@@.@.".to_string(),
+            ".@@@@@@@.@".to_string(),
+            ".@.@.@.@@@".to_string(),
+            "..@@@.@@@@".to_string(),
+            ".@@@@@@@@.".to_string(),
+            "....@@@...".to_string(),
+        ]
+    );
 }
