@@ -24,8 +24,7 @@ fn main() {
     }
 
     // sort
-    // ranges.sort_by(compare_ranges);
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
 
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
 
@@ -41,22 +40,6 @@ fn main() {
         .count();
 
     println!("result = {result}");
-}
-
-fn compare_ranges(range_lhs: &IngredientsRange, range_rhs: &IngredientsRange) -> Ordering {
-    if range_lhs.start() < range_rhs.start() {
-        Ordering::Less
-    } else if range_lhs.start() == range_rhs.start() {
-        if range_lhs.end() < range_rhs.end() {
-            Ordering::Less
-        } else if range_lhs.end() == range_rhs.end() {
-            Ordering::Equal
-        } else {
-            Ordering::Greater
-        }
-    } else {
-        Ordering::Greater
-    }
 }
 
 fn turn_into_range(line: &str) -> Option<IngredientsRange> {
@@ -175,33 +158,33 @@ fn test_turn_into_range_case_5() {
     assert_eq!(result, None);
 }
 
-// Compare Ranges
+// Test that sort by key works as expected
 
 #[test]
-fn test_compare_ranges_case_1() {
+fn test_sort_by_key_case_1() {
     let mut ranges = vec![3..=10, 2..=5];
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
     assert_eq!(ranges, vec![2..=5, 3..=10]);
 }
 
 #[test]
-fn test_compare_ranges_case_2() {
+fn test_sort_by_key_case_2() {
     let mut ranges = vec![2..=10, 3..=5];
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
     assert_eq!(ranges, vec![2..=10, 3..=5]);
 }
 
 #[test]
-fn test_compare_ranges_case_3() {
+fn test_sort_by_key_case_3() {
     let mut ranges = vec![3..=5, 3..=10];
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
     assert_eq!(ranges, vec![3..=5, 3..=10]);
 }
 
 #[test]
-fn test_compare_ranges_case_4() {
+fn test_sort_by_key_case_4() {
     let mut ranges = vec![3..=10, 3..=5];
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
     assert_eq!(ranges, vec![3..=5, 3..=10]);
 }
 
@@ -304,7 +287,7 @@ fn test_remove_overlapping_ranges_case_6() {
 #[test]
 fn test_sort_and_remove_overlapping_ranges_case_1() {
     let mut ranges: Vec<IngredientsRange> = vec![5..=7, 1..=5, 9..=11, 5..=8];
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
     assert_eq!(non_overlapping_ranges, vec![1..=11]);
 }
@@ -316,7 +299,7 @@ fn test_integer_position_case_1() {
     let mut ranges: Vec<IngredientsRange> = vec![5..=7, 1..=5, 9..=11, 5..=8];
 
     // need to sort
-    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
 
     // remove overlapping
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges); // this is : [1..=11]
@@ -342,7 +325,7 @@ fn test_integer_position_case_2() {
     let mut ranges: Vec<IngredientsRange> = vec![5..=7, 1..=5, 9..=11, 5..=8];
 
     // need to sort
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
 
     // remove overlapping
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges); // this is : [1..=11]
@@ -368,7 +351,7 @@ fn test_integer_position_case_3() {
     let mut ranges: Vec<IngredientsRange> = vec![];
 
     // need to sort
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
 
     // remove overlapping
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
@@ -384,7 +367,7 @@ fn test_integer_position_case_4() {
     let mut ranges: Vec<IngredientsRange> = vec![1..=5];
 
     // need to sort
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
 
     // remove overlapping
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
@@ -400,7 +383,7 @@ fn test_integer_position_case_5() {
     let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
 
     // need to sort
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
 
     // remove overlapping
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
@@ -416,7 +399,7 @@ fn test_integer_position_case_6() {
     let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
 
     // need to sort
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
 
     // remove overlapping
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
@@ -432,7 +415,7 @@ fn test_integer_position_case_7() {
     let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
 
     // need to sort
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
 
     // remove overlapping
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
@@ -448,7 +431,7 @@ fn test_integer_position_case_8() {
     let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
 
     // need to sort
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
 
     // remove overlapping
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
@@ -464,7 +447,7 @@ fn test_integer_position_case_9() {
     let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
 
     // need to sort
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
 
     // remove overlapping
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
@@ -480,7 +463,7 @@ fn test_integer_position_case_10() {
     let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
 
     // need to sort
-    ranges.sort_by(compare_ranges);
+    ranges.sort_by_key(|range| (*range.start(), *range.end()));
 
     // remove overlapping
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
