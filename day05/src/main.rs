@@ -28,16 +28,10 @@ fn main() {
 
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
 
-    let result = lines
-        .flatten() // converts Iterator<Result<String, _>> to Iterator<String>
-        .filter(|line| {
-            integer_position(
-                &non_overlapping_ranges,
-                line.parse::<RangeBoundary>().unwrap(),
-            )
-            .is_some()
-        })
-        .count();
+    let result: u64 = non_overlapping_ranges
+        .iter()
+        .map(|range| range.end() - range.start() + 1)
+        .sum();
 
     println!("result = {result}");
 }
