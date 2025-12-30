@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::cmp::{max, min};
 use std::ops::RangeInclusive;
 
 fn main() {
@@ -92,4 +93,57 @@ fn test_compare_ranges_case_3() {
     let mut ranges = vec![3..=10, 3..=5];
     ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
     assert_eq!(ranges, vec![3..=10, 3..=5]);
+}
+
+// I have the way to sort ranges. But these ranges might be overlapping.
+// I can merge the overlapping and end having less ranges.
+//
+// Merging two ranges when they are overlapping
+
+fn merge_overlapping_ranges(
+    range1: &RangeInclusive<RangeBoundary>,
+    range2: &RangeInclusive<RangeBoundary>,
+) -> Result<RangeInclusive<RangeBoundary>, String> {
+    if range1.end() < range2.start() || range2.end() < range1.start() {
+        return Err("Non overlapping ranges".to_string());
+    }
+    Ok(min(*range1.start(), *range2.start())..=max(*range1.end(), *range2.end()))
+}
+
+#[test]
+fn test_merge_overlapping_ranges_case_1() {
+    let range1 = 1..=5;
+    let range2 = 2..=6;
+    let non_overlapping_range = merge_overlapping_ranges(&range1, &range2);
+    assert_eq!(non_overlapping_range, Ok(1..=6));
+}
+
+#[test]
+fn test_merge_overlapping_ranges_case_2() {
+    let range1 = 1..=5;
+    let range2 = 6..=8;
+    let non_overlapping_range = merge_overlapping_ranges(&range1, &range2);
+    assert_eq!(
+        non_overlapping_range,
+        Err("Non overlapping ranges".to_string())
+    );
+}
+
+#[test]
+fn test_merge_overlapping_ranges_case_3() {
+    let range1 = 6..=8;
+    let range2 = 1..=5;
+    let non_overlapping_range = merge_overlapping_ranges(&range1, &range2);
+    assert_eq!(
+        non_overlapping_range,
+        Err("Non overlapping ranges".to_string())
+    );
+}
+
+#[test]
+fn test_merge_overlapping_ranges_case_4() {
+    let range1 = 2..=6;
+    let range2 = 1..=5;
+    let non_overlapping_range = merge_overlapping_ranges(&range1, &range2);
+    assert_eq!(non_overlapping_range, Ok(1..=6));
 }
