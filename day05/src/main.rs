@@ -1,13 +1,44 @@
 use std::cmp::Ordering;
 use std::cmp::{max, min};
+use std::io::BufRead;
 use std::ops::RangeInclusive;
-
-fn main() {
-    println!("Hello, world!");
-}
 
 type RangeBoundary = u64;
 type IngredientsRange = RangeInclusive<RangeBoundary>;
+
+// Will read lines from the standard input.
+fn main() {
+    let stdin = std::io::stdin();
+    let mut lines = stdin.lock().lines();
+    let mut ranges: Vec<IngredientsRange> = vec![];
+
+    for line in &mut lines {
+        let line = line.ok().unwrap();
+        if line.is_empty() {
+            break;
+        }
+
+        if let Some(r) = turn_into_range(&line) {
+            ranges.push(r);
+        }
+    }
+
+    // sort
+    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+
+    let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
+
+    let mut result = 0;
+    for line in &mut lines {
+        let line = line.ok().unwrap();
+        let integer = line.parse::<RangeBoundary>().unwrap();
+        let position = integer_position(&non_overlapping_ranges, integer);
+        if position.is_some() {
+            result += 1;
+        }
+    }
+    println!("result = {result}");
+}
 
 fn turn_into_range(line: &str) -> Option<IngredientsRange> {
     if line.is_empty() || line.len() < 3 {
