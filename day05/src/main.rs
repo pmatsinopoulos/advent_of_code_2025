@@ -24,10 +24,7 @@ fn turn_into_range(line: &str) -> Option<IngredientsRange> {
     Some(boundaries[0]..=boundaries[1])
 }
 
-fn compare_ranges(
-    range_lhs: &RangeInclusive<RangeBoundary>,
-    range_rhs: &RangeInclusive<RangeBoundary>,
-) -> Ordering {
+fn compare_ranges(range_lhs: &IngredientsRange, range_rhs: &IngredientsRange) -> Ordering {
     if range_lhs.start() < range_rhs.start() {
         Ordering::Less
     } else if range_lhs.start() == range_rhs.start() {
@@ -49,9 +46,9 @@ fn compare_ranges(
 // Merging two ranges when they are overlapping
 
 fn merge_overlapping_ranges(
-    range1: &RangeInclusive<RangeBoundary>,
-    range2: &RangeInclusive<RangeBoundary>,
-) -> Result<RangeInclusive<RangeBoundary>, String> {
+    range1: &IngredientsRange,
+    range2: &IngredientsRange,
+) -> Result<IngredientsRange, String> {
     if *range1.end() < *range2.start() - 1 || *range2.end() < *range1.start() - 1 {
         return Err("Non overlapping ranges".to_string());
     }
@@ -67,10 +64,8 @@ fn merge_overlapping_ranges(
 // Remove overlapping ranges by merging.
 // Note that this assumes that ranges are sorted by their `.start()`.
 
-fn remove_overlapping_ranges(
-    ranges: &Vec<RangeInclusive<RangeBoundary>>,
-) -> Vec<RangeInclusive<RangeBoundary>> {
-    let mut non_overlapping_ranges: Vec<RangeInclusive<RangeBoundary>> = vec![];
+fn remove_overlapping_ranges(ranges: &[IngredientsRange]) -> Vec<IngredientsRange> {
+    let mut non_overlapping_ranges: Vec<IngredientsRange> = vec![];
     for (i, range) in ranges.iter().enumerate() {
         if i == 0 {
             non_overlapping_ranges.push(range.clone());
@@ -88,6 +83,37 @@ fn remove_overlapping_ranges(
         }
     }
     non_overlapping_ranges
+}
+
+// Given a sorted and non-overlapping sequence of ranges
+// and an integer, I can find the position of the range
+// the integer belongs to
+
+// integer_position
+
+fn integer_position(ranges: &[IngredientsRange], integer: RangeBoundary) -> Option<usize> {
+    if ranges.is_empty() {
+        return None;
+    }
+
+    if ranges.len() == 1 {
+        if ranges[0].contains(&integer) {
+            return Some(0);
+        }
+        return None;
+    }
+
+    let check_position = ranges.len() / 2;
+
+    if ranges[check_position].contains(&integer) {
+        return Some(check_position);
+    }
+
+    if *ranges[check_position].start() > integer {
+        return integer_position(&ranges[0..check_position], integer);
+    }
+
+    integer_position(&ranges[check_position..], integer)
 }
 
 // ------------------------------------------------------------------
@@ -213,42 +239,42 @@ fn test_merge_overlapping_ranges_case_6() {
 
 #[test]
 fn test_remove_overlapping_ranges_case_1() {
-    let ranges: Vec<RangeInclusive<RangeBoundary>> = vec![1..=5, 2..=6, 8..=20];
+    let ranges: Vec<IngredientsRange> = vec![1..=5, 2..=6, 8..=20];
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
     assert_eq!(non_overlapping_ranges, vec![1..=6, 8..=20]);
 }
 
 #[test]
 fn test_remove_overlapping_ranges_case_2() {
-    let ranges: Vec<RangeInclusive<RangeBoundary>> = vec![1..=5, 8..=20];
+    let ranges: Vec<IngredientsRange> = vec![1..=5, 8..=20];
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
     assert_eq!(non_overlapping_ranges, vec![1..=5, 8..=20]);
 }
 
 #[test]
 fn test_remove_overlapping_ranges_case_3() {
-    let ranges: Vec<RangeInclusive<RangeBoundary>> = vec![1..=5];
+    let ranges: Vec<IngredientsRange> = vec![1..=5];
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
     assert_eq!(non_overlapping_ranges, vec![1..=5]);
 }
 
 #[test]
 fn test_remove_overlapping_ranges_case_4() {
-    let ranges: Vec<RangeInclusive<RangeBoundary>> = vec![];
+    let ranges: Vec<IngredientsRange> = vec![];
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
     assert_eq!(non_overlapping_ranges, vec![]);
 }
 
 #[test]
 fn test_remove_overlapping_ranges_case_5() {
-    let ranges: Vec<RangeInclusive<RangeBoundary>> = vec![1..=5, 5..=8, 5..=9, 8..=10];
+    let ranges: Vec<IngredientsRange> = vec![1..=5, 5..=8, 5..=9, 8..=10];
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
     assert_eq!(non_overlapping_ranges, vec![1..=10]);
 }
 
 #[test]
 fn test_remove_overlapping_ranges_case_6() {
-    let ranges: Vec<RangeInclusive<RangeBoundary>> = vec![1..=5, 5..=7, 5..=8, 9..=11];
+    let ranges: Vec<IngredientsRange> = vec![1..=5, 5..=7, 5..=8, 9..=11];
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
     assert_eq!(non_overlapping_ranges, vec![1..=11]);
 }
@@ -257,8 +283,190 @@ fn test_remove_overlapping_ranges_case_6() {
 
 #[test]
 fn test_sort_and_remove_overlapping_ranges_case_1() {
-    let mut ranges: Vec<RangeInclusive<RangeBoundary>> = vec![5..=7, 1..=5, 9..=11, 5..=8];
+    let mut ranges: Vec<IngredientsRange> = vec![5..=7, 1..=5, 9..=11, 5..=8];
     ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
     let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
     assert_eq!(non_overlapping_ranges, vec![1..=11]);
+}
+
+// integer position
+
+#[test]
+fn test_integer_position_case_1() {
+    let mut ranges: Vec<IngredientsRange> = vec![5..=7, 1..=5, 9..=11, 5..=8];
+
+    // need to sort
+    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+
+    // remove overlapping
+    let non_overlapping_ranges = remove_overlapping_ranges(&ranges); // this is : [1..=11]
+
+    let integer: RangeBoundary = 1;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, Some(0));
+
+    let integer: RangeBoundary = 11;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, Some(0));
+
+    let integer: RangeBoundary = 2;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, Some(0));
+}
+
+#[test]
+fn test_integer_position_case_2() {
+    let mut ranges: Vec<IngredientsRange> = vec![5..=7, 1..=5, 9..=11, 5..=8];
+
+    // need to sort
+    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+
+    // remove overlapping
+    let non_overlapping_ranges = remove_overlapping_ranges(&ranges); // this is : [1..=11]
+
+    let integer: RangeBoundary = 1;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, Some(0));
+
+    let integer: RangeBoundary = 11;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, Some(0));
+
+    let integer: RangeBoundary = 2;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, Some(0));
+}
+
+#[test]
+fn test_integer_position_case_3() {
+    let mut ranges: Vec<IngredientsRange> = vec![];
+
+    // need to sort
+    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+
+    // remove overlapping
+    let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
+
+    let integer: RangeBoundary = 1;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, None);
+}
+
+#[test]
+fn test_integer_position_case_4() {
+    let mut ranges: Vec<IngredientsRange> = vec![1..=5];
+
+    // need to sort
+    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+
+    // remove overlapping
+    let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
+
+    let integer: RangeBoundary = 3;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, Some(0));
+}
+
+#[test]
+fn test_integer_position_case_5() {
+    let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
+
+    // need to sort
+    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+
+    // remove overlapping
+    let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
+
+    let integer: RangeBoundary = 14;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, Some(1));
+}
+
+#[test]
+fn test_integer_position_case_6() {
+    let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
+
+    // need to sort
+    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+
+    // remove overlapping
+    let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
+
+    let integer: RangeBoundary = 20;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, None);
+}
+
+#[test]
+fn test_integer_position_case_7() {
+    let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
+
+    // need to sort
+    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+
+    // remove overlapping
+    let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
+
+    let integer: RangeBoundary = 0;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, None);
+}
+
+#[test]
+fn test_integer_position_case_8() {
+    let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
+
+    // need to sort
+    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+
+    // remove overlapping
+    let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
+
+    let integer: RangeBoundary = 6;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, None);
+}
+
+#[test]
+fn test_integer_position_case_9() {
+    let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
+
+    // need to sort
+    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+
+    // remove overlapping
+    let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
+
+    let integer: RangeBoundary = 5;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, Some(0));
+}
+
+#[test]
+fn test_integer_position_case_10() {
+    let mut ranges: Vec<IngredientsRange> = vec![8..=15, 1..=5];
+
+    // need to sort
+    ranges.sort_by(|lhs, rhs| compare_ranges(lhs, rhs));
+
+    // remove overlapping
+    let non_overlapping_ranges = remove_overlapping_ranges(&ranges);
+
+    let integer: RangeBoundary = 8;
+    let position = integer_position(&non_overlapping_ranges, integer);
+
+    assert_eq!(position, Some(1));
 }
