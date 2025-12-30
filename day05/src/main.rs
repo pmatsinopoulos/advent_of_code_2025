@@ -123,28 +123,17 @@ fn remove_overlapping_ranges(ranges: &[IngredientsRange]) -> Vec<IngredientsRang
 // integer_position
 
 fn integer_position(ranges: &[IngredientsRange], integer: RangeBoundary) -> Option<usize> {
-    if ranges.is_empty() {
-        return None;
-    }
-
-    if ranges.len() == 1 {
-        if ranges[0].contains(&integer) {
-            return Some(0);
-        }
-        return None;
-    }
-
-    let check_position = ranges.len() / 2;
-
-    if ranges[check_position].contains(&integer) {
-        return Some(check_position);
-    }
-
-    if *ranges[check_position].start() > integer {
-        return integer_position(&ranges[0..check_position], integer);
-    }
-
-    integer_position(&ranges[check_position..], integer)
+    ranges
+        .binary_search_by(|range| {
+            if integer < *range.start() {
+                Ordering::Greater
+            } else if integer > *range.end() {
+                Ordering::Less
+            } else {
+                Ordering::Equal
+            }
+        })
+        .ok()
 }
 
 // ------------------------------------------------------------------
