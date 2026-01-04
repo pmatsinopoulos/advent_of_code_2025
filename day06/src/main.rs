@@ -23,58 +23,57 @@ enum Item {
 }
 
 fn grand_total(lines: &str) -> Number {
-    let vectors = to_vec_of_vecs(lines);
-    vectors
+    to_vector_of_problems(lines)
         .iter()
-        .fold(0, |acc, item| acc + solve_problem(item))
+        .map(|p| solve_problem(p))
+        .sum()
 }
 
-fn to_vec_of_vecs(lines: &str) -> Vec<Vec<Item>> {
-    let vector_of_lines = lines.lines().collect::<Vec<&str>>();
-    if vector_of_lines.is_empty() {
-        return vec![vec![]];
+fn to_vector_of_problems(lines: &str) -> Vec<Vec<Item>> {
+    let rows: Vec<&str> = lines.lines().filter(|l| !l.is_empty()).collect();
+    if rows.is_empty() {
+        return vec![];
     }
-    let length_of_first_line = vector_of_lines[0].len();
+    let width = rows[0].len();
 
     assert!(
-        vector_of_lines
-            .iter()
-            .filter(|line| !line.is_empty())
-            .all(|line| line.len() == length_of_first_line),
+        rows.iter().all(|line| line.len() == width),
+        "All rows must have equal width"
     );
 
     // we need to find the first column that it has all values a blank space
     let mut starting_column = 0;
     let mut result = vec![];
     let mut result_item = 0;
-    while starting_column < length_of_first_line {
+    let height = rows.len();
+    while starting_column < width {
         let mut column: usize = starting_column;
         let mut column_found = false;
-        while column < length_of_first_line {
+        while column < width {
             let mut all_spaces = true;
             let mut row = 0;
-            while row < vector_of_lines.len() {
-                if vector_of_lines[row].chars().nth(column).unwrap() != ' ' {
+            while row < height {
+                if rows[row].as_bytes()[column] != b' ' {
                     all_spaces = false;
                     break;
                 }
                 row += 1;
             }
-            if row == vector_of_lines.len() && all_spaces {
+            if row == height && all_spaces {
                 column_found = true;
                 break;
             }
             column += 1;
         }
 
-        if !column_found && starting_column < length_of_first_line {
+        if !column_found && starting_column < width {
             column_found = true;
-            column = length_of_first_line;
+            column = width;
         }
 
         if column_found {
             result.push(vec![]);
-            for row in &vector_of_lines {
+            for row in &rows {
                 let string = row[starting_column..column].to_string();
                 let first_char = string.chars().next().unwrap();
                 if first_char == '*' {
@@ -135,7 +134,7 @@ fn solve_problem(problem: &Vec<Item>) -> Number {
 #[test]
 fn test_to_vec_of_vecs_case_1() {
     let input = "123 328  51 64 \r\n 45 64  387 23 \r\n  6 98  215 314\r\n*   +   *   +  \r\n";
-    let result = to_vec_of_vecs(input);
+    let result = to_vector_of_problems(input);
     assert_eq!(
         result,
         vec![
