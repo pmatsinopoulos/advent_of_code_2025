@@ -53,10 +53,10 @@ fn build_grid(input: &str) -> Vec<Vec<char>> {
 #[test]
 fn test_build_grid_case_1() {
     let input = "\
-.......S..........\n\
-.......^..........\n\
-\n\
-...";
+                      .......S..........\n\
+                      .......^..........\n\
+                      \n\
+                      ...";
     let vec: Vec<Vec<char>> = build_grid(input);
     let expected_vec: Vec<Vec<char>> = vec![
         vec![
@@ -75,10 +75,10 @@ fn test_build_grid_case_1() {
 #[test]
 fn test_number_of_splits_case_1() {
     let input = "\
-.......S..........\n\
-.......^..........\n\
-\n\
-...";
+                      .......S..........\n\
+                      .......^..........\n\
+                      \n\
+                      ...";
     let mut vec: Vec<Vec<char>> = build_grid(input);
     let result = number_of_splits(&mut vec);
     assert_eq!(result, 1);
@@ -87,11 +87,11 @@ fn test_number_of_splits_case_1() {
 #[test]
 fn test_number_of_splits_case_2() {
     let input = "\
-.......S.......\n\
-...............\n\
-.......^.......\n\
-\n\
-...";
+                      .......S.......\n\
+                      ...............\n\
+                      .......^.......\n\
+                      \n\
+                      ...";
     let mut vec: Vec<Vec<char>> = build_grid(input);
     let result = number_of_splits(&mut vec);
     assert_eq!(result, 1);
@@ -100,13 +100,13 @@ fn test_number_of_splits_case_2() {
 #[test]
 fn test_number_of_splits_case_3() {
     let input = "\
-.......S.......\n\
-...............\n\
-.......^.......\n\
-...............\n\
-......^.^......\n\
-\n\
-...";
+                      .......S.......\n\
+                      ...............\n\
+                      .......^.......\n\
+                      ...............\n\
+                      ......^.^......\n\
+                      \n\
+                      ...";
     let mut vec: Vec<Vec<char>> = build_grid(input);
     let result = number_of_splits(&mut vec);
     assert_eq!(result, 3);
