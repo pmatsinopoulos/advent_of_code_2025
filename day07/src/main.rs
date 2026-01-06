@@ -10,30 +10,31 @@ fn main() -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn number_of_splits(grid: &mut Vec<Vec<char>>) -> u32 {
+fn number_of_splits(grid: &mut Vec<Vec<char>>) -> usize {
     if grid.len() < 2 {
         return 0;
     }
 
     // We do have at least two lines in the grid.
 
-    let mut result: u32 = 0;
+    let mut result: usize = 0;
 
     for i in 0..grid.len() {
         for j in 0..grid[i].len() {
             let ch = grid[i][j];
-            if ch == 'S' {
-                grid[i][j] = '|';
-            } else if ch == '^' && grid[i - 1][j] == '|' {
-                result += 1;
-                if j > 0 {
-                    grid[i][j - 1] = '|';
+            match ch {
+                'S' => grid[i][j] = '|',
+                '^' if grid[i - 1][j] == '|' => {
+                    result += 1;
+                    if j > 0 {
+                        grid[i][j - 1] = '|';
+                    }
+                    if j + 1 < grid[i].len() {
+                        grid[i][j + 1] = '|';
+                    }
                 }
-                if j + 1 < grid[i].len() {
-                    grid[i][j + 1] = '|';
-                }
-            } else if ch == '.' && i > 0 && grid[i - 1][j] == '|' {
-                grid[i][j] = '|';
+                '.' if i > 0 && grid[i - 1][j] == '|' => grid[i][j] = '|',
+                _ => (),
             }
         }
     }
