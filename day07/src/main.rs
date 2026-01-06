@@ -1,0 +1,112 @@
+use std::io;
+
+fn main() -> Result<(), std::io::Error> {
+    let input = io::read_to_string(io::stdin())?;
+    let mut vector = vector_of_chars(&input);
+    let splits = number_of_splits(&mut vector);
+
+    println!("splits = {}", splits);
+
+    Ok(())
+}
+
+fn number_of_splits(grid: &mut Vec<Vec<char>>) -> u32 {
+    if grid.len() < 2 {
+        return 0;
+    }
+
+    // We do have at least two lines in the grid.
+
+    let mut result: u32 = 0;
+
+    for i in 0..grid.len() {
+        for j in 0..grid[i].len() {
+            let ch = grid[i][j];
+            if ch == 'S' {
+                grid[i][j] = '|';
+            } else if ch == '^' && grid[i - 1][j] == '|' {
+                result += 1;
+                if j > 0 {
+                    grid[i][j - 1] = '|';
+                }
+                if j + 1 < grid[i].len() {
+                    grid[i][j + 1] = '|';
+                }
+            } else if ch == '.' && i > 0 && grid[i - 1][j] == '|' {
+                grid[i][j] = '|';
+            }
+        }
+    }
+
+    result
+}
+
+fn vector_of_chars(input: &str) -> Vec<Vec<char>> {
+    input
+        .lines()
+        .filter(|line| !line.is_empty())
+        .map(|line| line.chars().collect::<Vec<char>>())
+        .collect::<Vec<Vec<char>>>()
+}
+
+#[test]
+fn test_vector_of_chars_case_1() {
+    let input = "\
+.......S..........\n\
+.......^..........\n\
+\n\
+...";
+    let vec: Vec<Vec<char>> = vector_of_chars(input);
+    let expected_vec: Vec<Vec<char>> = vec![
+        vec![
+            '.', '.', '.', '.', '.', '.', '.', 'S', '.', '.', '.', '.', '.', '.', '.', '.', '.',
+            '.',
+        ],
+        vec![
+            '.', '.', '.', '.', '.', '.', '.', '^', '.', '.', '.', '.', '.', '.', '.', '.', '.',
+            '.',
+        ],
+        vec!['.', '.', '.'],
+    ];
+    assert_eq!(vec, expected_vec);
+}
+
+#[test]
+fn test_number_of_splits_case_1() {
+    let input = "\
+.......S..........\n\
+.......^..........\n\
+\n\
+...";
+    let mut vec: Vec<Vec<char>> = vector_of_chars(input);
+    let result = number_of_splits(&mut vec);
+    assert_eq!(result, 1);
+}
+
+#[test]
+fn test_number_of_splits_case_2() {
+    let input = "\
+.......S.......\n\
+...............\n\
+.......^.......\n\
+\n\
+...";
+    let mut vec: Vec<Vec<char>> = vector_of_chars(input);
+    let result = number_of_splits(&mut vec);
+    assert_eq!(result, 1);
+}
+
+#[test]
+fn test_number_of_splits_case_3() {
+    let input = "\
+.......S.......\n\
+...............\n\
+.......^.......\n\
+...............\n\
+......^.^......\n\
+\n\
+...";
+    let mut vec: Vec<Vec<char>> = vector_of_chars(input);
+    let result = number_of_splits(&mut vec);
+    assert_eq!(result, 3);
+}
