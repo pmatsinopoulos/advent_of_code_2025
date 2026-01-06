@@ -2,7 +2,7 @@ use std::io;
 
 fn main() -> Result<(), std::io::Error> {
     let input = io::read_to_string(io::stdin())?;
-    let mut vector = vector_of_chars(&input);
+    let mut vector = build_grid(&input);
     let splits = number_of_splits(&mut vector);
 
     println!("splits = {}", splits);
@@ -42,22 +42,22 @@ fn number_of_splits(grid: &mut Vec<Vec<char>>) -> usize {
     result
 }
 
-fn vector_of_chars(input: &str) -> Vec<Vec<char>> {
+fn build_grid(input: &str) -> Vec<Vec<char>> {
     input
         .lines()
         .filter(|line| !line.is_empty())
-        .map(|line| line.chars().collect::<Vec<char>>())
-        .collect::<Vec<Vec<char>>>()
+        .map(|line| line.chars().collect())
+        .collect()
 }
 
 #[test]
-fn test_vector_of_chars_case_1() {
+fn test_build_grid_case_1() {
     let input = "\
 .......S..........\n\
 .......^..........\n\
 \n\
 ...";
-    let vec: Vec<Vec<char>> = vector_of_chars(input);
+    let vec: Vec<Vec<char>> = build_grid(input);
     let expected_vec: Vec<Vec<char>> = vec![
         vec![
             '.', '.', '.', '.', '.', '.', '.', 'S', '.', '.', '.', '.', '.', '.', '.', '.', '.',
@@ -79,7 +79,7 @@ fn test_number_of_splits_case_1() {
 .......^..........\n\
 \n\
 ...";
-    let mut vec: Vec<Vec<char>> = vector_of_chars(input);
+    let mut vec: Vec<Vec<char>> = build_grid(input);
     let result = number_of_splits(&mut vec);
     assert_eq!(result, 1);
 }
@@ -92,7 +92,7 @@ fn test_number_of_splits_case_2() {
 .......^.......\n\
 \n\
 ...";
-    let mut vec: Vec<Vec<char>> = vector_of_chars(input);
+    let mut vec: Vec<Vec<char>> = build_grid(input);
     let result = number_of_splits(&mut vec);
     assert_eq!(result, 1);
 }
@@ -107,7 +107,7 @@ fn test_number_of_splits_case_3() {
 ......^.^......\n\
 \n\
 ...";
-    let mut vec: Vec<Vec<char>> = vector_of_chars(input);
+    let mut vec: Vec<Vec<char>> = build_grid(input);
     let result = number_of_splits(&mut vec);
     assert_eq!(result, 3);
 }
